@@ -3,19 +3,12 @@
   "version": "0.1.0",
   "description": "",
   "main": "./src/game.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "webpack --config webpack.config.cjs",
-    "watch": "webpack --config webpack.config.cjs --watch",
-    "serve": "http-server dist/"
-  },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deathraygames/404-js13k-2020.git"
+    "url": "git+https://github.com/deathraygames/star-hopper-opus.git"
   },
   "keywords": [
-    "js13k",
-    "js13k-2020",
+    "space",
     "game",
     "webgl"
   ],
@@ -30,12 +23,18 @@
     "closure-webpack-plugin": "^2.3.0",
     "google-closure-compiler": "^20200719.0.0",
     "http-server": "^0.12.3",
+    "vite": "^2.0.0-beta.47",
     "webpack": "^4.44.1",
     "webpack-cli": "^3.3.12"
   },
   "dependencies": {
-    "rocket-boots-coords": "git+https://github.com/rocket-boots/coords.git#v0.6.0",
+    "rocket-boots-coords": "git+https://github.com/rocket-boots/coords.git#v0.6.1",
     "rocket-boots-physics": "git+https://github.com/rocket-boots/physics.git#v0.5.0",
     "webglp": "git+https://github.com/rocket-boots/webglp.git#v0.1.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "serve": "vite",
+    "build": "vite build"
   }
 }

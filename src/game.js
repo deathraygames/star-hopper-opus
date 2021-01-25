@@ -13,9 +13,9 @@ import Blast from './Blast.js';
 import Fragment from './Fragment.js';
 
 const SHADERS = [
-	['v.glsl', 'stars-f.glsl'],
+	['shaders/v.glsl', 'shaders/stars-f.glsl'],
 	//['v.glsl', 'sun-f.glsl'],
-	['space-v.glsl', 'space-f.glsl'],
+	['shaders/space-v.glsl', 'shaders/space-f.glsl'],
 ];
 const NUM_OF_ASTEROIDS = 404;
 const ASTEROID_RADIUS = 120;
@@ -454,7 +454,7 @@ const init = async () => {
 	setupInput(glp.gl.canvas, ship, sun);
 	setupLoop(ship, $('count'));
 	return glp;
-}
+};
 
 document.addEventListener('DOMContentLoaded', init);
 
