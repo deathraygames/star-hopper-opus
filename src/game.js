@@ -458,4 +458,6 @@ const init = async () => {
 
 document.addEventListener('DOMContentLoaded', init);
 
-window.z = { SpaceObject, glp, objects };
+const game = window.z = { SpaceObject, glp, objects };
+
+export default game;
