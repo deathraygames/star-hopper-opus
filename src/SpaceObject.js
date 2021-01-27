@@ -25,7 +25,7 @@ class SpaceObject extends Polygon {
 				// boundingBox: [],
 				hit: false,
 				verts: [], // set in calc
-				vc: null, // set in calc
+				vc: null, // verts with color - set in calc
 				// Physics related values
 				// pos: new Coords(),
 				// force: new Coords(),
@@ -99,22 +99,36 @@ class SpaceObject extends Polygon {
 		this.vc = new Float32Array(vc);
 	}
 
-	calcVertWithRotation(vc, bv, i) {
+	static calcRotatedVert(pos, baseVert, rotation) {
 		// Thanks https://stackoverflow.com/a/17411276/1766230
-		const cos = Math.cos(this.rotation);
-		const sin = Math.sin(this.rotation);
-		this.verts[i] = [
-			(cos * bv[0]) - (sin * bv[1]) + this.pos.x, 
-			(cos * bv[1]) + (sin * bv[0]) + this.pos.y,
+		const cos = Math.cos(rotation);
+		const sin = Math.sin(rotation);
+		return [
+			(cos * baseVert[0]) - (sin * baseVert[1]) + pos.x, 
+			(cos * baseVert[1]) + (sin * baseVert[0]) + pos.y,
 			0,
 		];
+	}
+
+	calcVertWithRotation(vc, bv, i) {
+		this.verts[i] = SpaceObject.calcRotatedVert(this.pos, bv, this.rotation);
 		return vc.concat(this.verts[i]).concat(this.getColor());
 	}
 
 	calcVertsWithRotation() {
 		this.verts.length = 0;
-		let vc = this.baseVerts.reduce((vc, bv, i) => this.calcVertWithRotation(vc, bv, i), []);
+		const vc = this.baseVerts.reduce((vc, bv, i) => this.calcVertWithRotation(vc, bv, i), []);
 		this.vc = new Float32Array(vc);
+	}
+
+	recalcVertsWithRotation() {
+		this.baseVerts.forEach((bv, i) => {
+			const rotVert = SpaceObject.calcRotatedVert(this.pos, bv, this.rotation);
+			const baseVcIndex = i * 6;
+			this.vc[baseVcIndex] = rotVert[0];
+			this.vc[baseVcIndex + 1] = rotVert[1];
+			this.vc[baseVcIndex + 2] = rotVert[2];
+		});
 	}
 
 	static rotate(xy, radians, center) {

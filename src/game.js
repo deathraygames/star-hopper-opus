@@ -5,24 +5,17 @@ import Asteroid from './Asteroid.js';
 import Sun from './Sun.js';
 import sounds from './sounds.js';
 
-// import webglp from '../node_modules/webglp/webglp.js';
-
-// import webglp from '../../../rocket-boots-repos/webglp/webglp.js';
-import webglp from 'webglp';
+import WebglpRenderer from './WebglpRenderer.js';
 import Blast from './Blast.js';
 import Fragment from './Fragment.js';
 
-const SHADERS = [
-	['shaders/v.glsl', 'shaders/stars-f.glsl'],
-	//['v.glsl', 'sun-f.glsl'],
-	['shaders/space-v.glsl', 'shaders/space-f.glsl'],
-];
-const NUM_OF_ASTEROIDS = 404;
+const NUM_OF_ASTEROIDS = 40;
 const ASTEROID_RADIUS = 120;
 const ASTEROID_RADIUS_RANGE = 40;
 const MAX_ASTEROID_RADIUS = 250;
 const MAX_SHIP_RADIUS = 800;
-const TIME_SCALE = 1;
+const TIME_SCALE = 1.;
+const EXHAUST_WAIT = 80; // how many miliseconds between thrust/exhaust
 
 const MAX_ZOOM_DELTA = 600;
 const MIN_ZOOM = 0.4;
@@ -30,7 +23,6 @@ const MAX_ZOOM = 5000;
 const ZOOM_MULTIPLIER = .001;
 
 let zoom = 20.;
-let glp;
 let lastAsteroidCount = NUM_OF_ASTEROIDS;
 let loop;
 let isStarted = false;
@@ -44,47 +36,14 @@ const objects = [];
 const effects = [];
 const sun = setupSun();
 const asteroids = setupAsteroids(sun);
-const ship = setupShip(sun)
+const ship = setupShip(sun);
+const renderer = new WebglpRenderer();
 
 //------------------- DRAW
 
 const draw = () => {
-	const uniforms = [
-		['iResolution', glp.gl.canvas.width, glp.gl.canvas.height],
-		['zoom', zoom],
-		['viewerPosition', ship.pos.x, ship.pos.y, 0.],
-		['iTime', 0.],
-	];
-
-	// Draw stars background
-	glp.use(0).draw({ uniforms, buffs: [['position']] });
-
-	// Draw "space" galaxy
-	const buffs = [
-		['position', { size: 3, stride: 6 }],
-		['color', { size: 3, stride: 6, offset: 3 }],
-	];
-	glp.use(1).draw({
-		uniforms,
-		buffs,
-		verts: new Float32Array([]), 
-		vertSize: 6,
-		type: glp.gl.TRIANGLE_FAN,
-		clear: false,
-	});
-
-	effects.concat(objects).forEach((o) => {
-		// glp.unif('translation', 0, 0, 0); // o.x, o.y, o.z);
-		glp.draw({
-			// uniforms: [],
-			buffs,
-			verts: o.getVertColors(), // used to calculate the verts to draw
-			vertSize: 6,
-			type: glp.gl.TRIANGLE_FAN,
-			clear: false,
-		});
-	});
-};
+	renderer.draw(effects.concat(objects), ship.pos, zoom);
+}
 
 //---------------- Achievements
 
@@ -120,14 +79,14 @@ function resetFarAwayObject(o, r) {
 const objectLoop = (t) => {
 	let asteroidCount = 0;
 	const deleteIndices = [];
-	objects.forEach((o, i) => {
+	objects.forEach(function handleObject(o, i) {
 		if (o.delete) {
 			deleteIndices.push(i);
 			return;
 		}
 		if (o.ongoing) { o.ongoing(t); }
 		o.rotate(t);
-		o.calcVertsWithRotation();
+		o.recalcVertsWithRotation();
 		// Don't do gravity on bullets (performance) or the sun (because it can't move)
 		if (o.gravitate && !(o instanceof Sun)) {
 			o.gravitate(t, [sun]);
@@ -146,7 +105,7 @@ const objectLoop = (t) => {
 			}
 		}
 	});
-	effects.forEach((o) => {
+	effects.forEach(function rotateEffects(o) {
 		o.rotate(t);
 		o.calcVertsWithRotation();
 	});
@@ -326,6 +285,7 @@ function setupSun() {
 
 const setupLoop = (ship, countElt) => {
 	let t = 0;
+	let lastExhaustTime = 0;
 	const drawDom = (c) => {
 		if (lastAsteroidCount === c) { return; }
 		countElt.innerHTML = c;
@@ -333,18 +293,21 @@ const setupLoop = (ship, countElt) => {
 		if (c === 0) {
 			$('win').style.display = 'block';
 		}
-	}
+	};
 	loop = (dtOverride) => {
-		window.requestAnimationFrame((now) => {
-			const dt = (dtOverride === undefined) ? ((now - t) / 1000) * TIME_SCALE : dtOverride;
-			if (ship.engaged) {
+		window.requestAnimationFrame(function handleFrame(now) {
+			const dt = (dtOverride === undefined) ? ((now - t) / 1000.) * TIME_SCALE : dtOverride;
+			const fps = 1/dt;
+			if (fps < 30) {	console.log(1/dt); }
+			if (ship.engaged && (now - lastExhaustTime) > EXHAUST_WAIT) {
 				makeExhaust();
+				lastExhaustTime = now;
 			}
 			const { asteroidCount } = objectLoop(dt);
 			drawDom(asteroidCount);
 			draw();
 			t = now;
-			loop();
+			loop();	
 		});
 	};
 	objectLoop(0);
@@ -439,25 +402,23 @@ const setupInput = (canvas, ship) => {
 		achieve('rotate');
 	};
 	document.addEventListener('click', (e) => {
-		console.log(e.target, e);
+		// console.log(e.target, e);
 		if (e.target.id === 'restart') {
 			location.reload();
 		}
 	});
 };
 
-// Create glp
+// Initialize renderer, input, loop
 const init = async () => {
-	glp = await webglp.init('#canvas', SHADERS, { fullscreen: true });
-	window.z.glp = glp;
-	console.log(glp);
-	setupInput(glp.gl.canvas, ship, sun);
+	const { canvas } = await renderer.init();
+	window.z.glp = renderer.glp;
+	setupInput(canvas, ship, sun);
 	setupLoop(ship, $('count'));
-	return glp;
 };
 
 document.addEventListener('DOMContentLoaded', init);
 
-const game = window.z = { SpaceObject, glp, objects };
+const game = window.z = { SpaceObject, objects, effects };
 
 export default game;
