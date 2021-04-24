@@ -13,6 +13,12 @@ class WebglpRenderer {
 		this.glp = null;
 	}
 
+	/**
+	 * Draw some objects at the viewer's position with a zoom
+	 * @param {Array} vertObjects - array of objects that have a `getVertColors` method
+	 * @param {Object} viewerPosition - object containing `x` and `y` properties
+	 * @param {Number} zoom - number
+	 */
 	draw(vertObjects = [], viewerPosition, zoom) {
 		const { glp } = this;
 		const uniforms = [
@@ -38,23 +44,33 @@ class WebglpRenderer {
 			type: glp.gl.TRIANGLE_FAN,
 			clear: false,
 		});
-	
-		for (let i = 0; i < vertObjects.length; i++) {
-			// glp.unif('translation', 0, 0, 0); // o.x, o.y, o.z);
+
+		function drawVertObject(obj) {
 			glp.draw({
 				// uniforms: [],
 				buffs,
-				verts: vertObjects[i].getVertColors(), // used to calculate the verts to draw
+				verts: obj.getVertColors(), // used to calculate the verts to draw
 				vertSize: 6,
 				type: glp.gl.TRIANGLE_FAN,
 				clear: false,
 			});
 		}
+	
+		for (let i = 0; i < vertObjects.length; i++) {
+			// glp.unif('translation', 0, 0, 0); // o.x, o.y, o.z);
+			const obj = vertObjects[i];
+			drawVertObject(obj);
+			if (obj.children && obj.children.length > 0) {
+				for (let c = 0; c < obj.children.length; c++) {
+					drawVertObject(obj.children[c]);	
+				}
+			}
+		}
 	}
 
 	async init(canvasSelector = '#canvas') {
 		this.glp = await webglp.init(canvasSelector, SHADERS, { fullscreen: true });
-		console.log(this.glp);
+		// console.log(this.glp);
 		return { canvas: this.glp.gl.canvas };
 	}
 

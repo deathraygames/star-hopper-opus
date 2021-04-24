@@ -1,19 +1,22 @@
 
 class Polygon {
-	constructor(verts) {
-		this.verts = verts;
+	constructor(verts = []) {
+		this.verts = [...verts];
 	}
+
+	static PI = Math.PI;
+	static TWO_PI = Math.PI * 2;
+	static HALF_PI = Math.PI / 2;
 
 	static getRegularPolygonVerts(n = 3, r = 1, rand = 0) {
 		const verts = [];
 		const a = 0;
-		const TWO_PI = Math.PI * 2;
 		for(let i = 0; i < n; i++) {
 			// Thanks to https://youtu.be/H9CSWMxJx84?t=2729
 			const vr = (rand) ? r + (Math.random() * rand) : r;
 			verts.push([
-				vr * Math.cos(a + i * TWO_PI / n), // x
-				vr * Math.sin(a + i * TWO_PI / n), // y
+				vr * Math.cos(a + i * Polygon.TWO_PI / n), // x
+				vr * Math.sin(a + i * Polygon.TWO_PI / n), // y
 				0
 			]);
 		}

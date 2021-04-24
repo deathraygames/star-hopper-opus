@@ -1,74 +1,25 @@
-import Polygon from './Polygon.js';
-// import physics from '../../../rocket-boots-repos/physics/src/physics.js';
-import physics from '../node_modules/rocket-boots-physics/src/physics.js';
+import DynamicPolygon from './DynamicPolygon.js';
+import physics from '../../../rocket-boots-repos/physics/src/physics.js';
+// import physics from '../node_modules/rocket-boots-physics/src/physics.js';
 
 // import { Coords } from 'rocket-boots-coords';
 // physics.Coords = Coords;
 
 physics.bigG = .000001;
 
-class SpaceObject extends Polygon {
-	constructor(baseVerts = []) {
-		super([]);
+/** An object that exists in 2D space, an extension of a polygon but with physics */
+class SpaceObject extends DynamicPolygon {
+	constructor(baseVerts = [], baseColorParam) {
 		const c = () => Math.random() * 0.2 + 0.4;
-		const o = this;
-		Object.assign(
-			o,
-			{
-				baseVerts,
-				baseColor: [
-					c(),
-					c(),
-					c(),
-				],
-				hitColor: [.7, 0., 0.],
-				// boundingBox: [],
-				hit: false,
-				verts: [], // set in calc
-				vc: null, // verts with color - set in calc
-				// Physics related values
-				// pos: new Coords(),
-				// force: new Coords(),
-				// acc: new Coords(),
-				// vel: new Coords(),
-				r: 0,
-				outerRadius: 0,
-				innerRadius: 0,
-				children: [],
-			}
-		);
-		physics.physical(o, { mass: 10. });
-		o.alignToCenter();
-		o.calcRadii();
-		o.calcVerts();
-		o.calcMass();
+		const baseColor = baseColorParam || [c(), c(), c()];
+		super({ baseVerts, baseColor });
 		
-		o.Coords = physics.Coords;
-	}
-
-	alignToCenter() {
-		const center = Polygon.getCenter(this.baseVerts);
-		this.baseVerts.forEach((bv) => {
-			[0,1].forEach(i => bv[i] = bv[i] - center[i]);
-		});
-	}
-
-	// calcRadii() {
-	// 	const { inner, outer } = Polygon.getRadii(this.baseVerts);
-	// 	this.r = outer;
-	// 	this.innerRadius = inner;
-	// }
-
-	calcRadii() {
-		let inner = Infinity;
-		// Outer/largest radius
-		this.outerRadius = this.r = this.baseVerts.reduce((n, v) => {
-			// Store radius on each base vertex for quicker computation later
-			const r = v.r = Polygon.getRadius(v);
-			if (r < inner) { inner = r; }
-			return (r > n) ? r : n; // Look for the largest
-		}, 0);
-		this.innerRadius = inner;
+		this.hit = false;
+		physics.physical(this, { mass: 10. });
+		
+		this.calcMass();
+		
+		this.Coords = physics.Coords;
 	}
 
 	calcMass() {
@@ -76,64 +27,13 @@ class SpaceObject extends Polygon {
 		// console.log('mass', this.mass);
 	}
 
-	getVertColors() {
-		return this.vc;
-	}
-
 	getColor(v, bv, i) {
 		const bc = this.baseColor;
 		return [
-			bc[0] + (this.hit ? .1 : 0.),
-			bc[1] + (this.isColliding ? .1 : .0),
+			this.hit ? bc[0] + .1 : bc[0],
+			this.isColliding ? bc[1] + .1 : bc[1],
 			bc[2],
 		];
-	}
-
-	calcVerts() {
-		let vc = [];
-		this.verts.length = 0;
-		this.baseVerts.forEach((bv, i) => {
-			const v = this.verts[i] = [bv[0] + this.pos.x, bv[1] + this.pos.y, 0]; // bv[2] + this.pos.z];
-			vc = vc.concat(v).concat(this.getColor(v, bv, i));
-		});
-		this.vc = new Float32Array(vc);
-	}
-
-	static calcRotatedVert(pos, baseVert, rotation) {
-		// Thanks https://stackoverflow.com/a/17411276/1766230
-		const cos = Math.cos(rotation);
-		const sin = Math.sin(rotation);
-		return [
-			(cos * baseVert[0]) - (sin * baseVert[1]) + pos.x, 
-			(cos * baseVert[1]) + (sin * baseVert[0]) + pos.y,
-			0,
-		];
-	}
-
-	calcVertWithRotation(vc, bv, i) {
-		this.verts[i] = SpaceObject.calcRotatedVert(this.pos, bv, this.rotation);
-		return vc.concat(this.verts[i]).concat(this.getColor());
-	}
-
-	calcVertsWithRotation() {
-		this.verts.length = 0;
-		const vc = this.baseVerts.reduce((vc, bv, i) => this.calcVertWithRotation(vc, bv, i), []);
-		this.vc = new Float32Array(vc);
-	}
-
-	recalcVertsWithRotation() {
-		this.baseVerts.forEach((bv, i) => {
-			const rotVert = SpaceObject.calcRotatedVert(this.pos, bv, this.rotation);
-			const baseVcIndex = i * 6;
-			this.vc[baseVcIndex] = rotVert[0];
-			this.vc[baseVcIndex + 1] = rotVert[1];
-			this.vc[baseVcIndex + 2] = rotVert[2];
-		});
-	}
-
-	static rotate(xy, radians, center) {
-		let x = xy[0] - center[0];
-		x += center[0];
 	}
 
 	// clearHit() {

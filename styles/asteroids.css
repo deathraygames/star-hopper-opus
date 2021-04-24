@@ -1,0 +1,131 @@
+body {
+	padding: 0;
+	color: rgba(255, 255, 255, 0.75);
+	font-family: Verdana, sans-serif;
+	background:#112;
+	text-align: center;
+	overflow: hidden;
+}
+header {
+	position: absolute; top: 10%;
+	width: 100%;
+	z-index: 2;
+	user-select: none;
+	font-size: 8vmin;
+	transition: 5s all ease-in-out;
+}
+.go header {
+	top: 1em;
+	font-size: 20px;
+}
+main {
+	position: absolute;
+	top: 0; left: 0;
+	width: 100%;
+	height: 100%;
+	margin: 0 auto;
+}
+canvas {
+	width: 100vmin;
+	height: 100vmin;
+	margin: 0 auto;
+	background: #000;
+}
+#total {
+	opacity: 0;
+	font-size: 0;
+}
+.go #total {
+	font-size: 20px;
+	opacity: 0.5;
+	transition: 5s all ease-in-out;
+}
+.go .title {
+	font-size: 0;
+	transition: 2s all ease-in-out;
+	opacity: 0;
+}
+.stats {
+	position: fixed;
+	top: 1em;
+	left: 1em;
+	text-align: left;
+	opacity: 0;
+	transform: scale(0);
+	font-size: 16px;
+}
+.go .stats {
+	transform: scale(1);
+	opacity: 0.5;
+	transition: 5s all ease-in-out;
+}
+.stats dt {
+	display: inline-block;
+	min-width: 8em;
+}
+.stats dd {
+	display: inline-block;
+}
+section {
+	position: absolute;
+	bottom: 6%;
+	left: 50%;
+	margin-left: -10em;
+	width: 20em;
+	border: solid 1px #87697F;
+	padding: 2em;
+	opacity: 1;
+	background: rgba(0,0,0,0.65);
+	transform: scale(1);
+	transition: 3s all ease-in-out;
+}
+section.closed {
+	opacity: 0;
+	bottom: -20%;
+	transform: scale(0);
+}
+ul {
+	text-align: left;
+}
+a {
+	color: #87697F;
+}
+#win, #sun, #bullet {
+	display: none;
+	color: rgba(153, 255, 77, 1);
+}
+#dead {
+	color: rgba(153, 255, 77, 1);
+}
+#dead strong {
+	font-size: 150%;
+}
+#intro li {
+	list-style: none;
+}
+li::before {
+	display: inline-block;
+	content: "🔲";
+	margin-right: 1em;
+}
+.unlocked {
+	color: rgba(153, 255, 77, 1);
+	text-decoration: line-through;
+}
+.unlocked::before {
+	content: "✅";
+}
+footer {
+	margin: 1em 0;
+	color: rgba(255, 255, 255, 0.5);
+	font-size: 80%;
+}
+#restart {
+	font-size: inherit;
+	background: rgba(153, 255, 77, 1);
+	border: 0;
+	padding: 0.75em 2em;
+	text-transform: uppercase;
+	cursor: pointer;
+	margin: 1em;
+}
